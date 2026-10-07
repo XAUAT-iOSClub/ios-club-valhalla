@@ -1,12 +1,9 @@
 import type {Metadata} from "next";
+import type {ReactNode} from "react";
 import {Geist, Geist_Mono} from "next/font/google";
 import "./globals.css";
-import {headers} from 'next/headers';
-import {isAuthenticated} from "@/lib/services/authService";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
-import React from "react";
-import { AuthProvider } from "@/app/contexts/AuthContext";
 
 const geistSans = Geist({
     variable: "--font-geist-sans",
@@ -23,23 +20,21 @@ export const metadata: Metadata = {
     description: "纪念那些曾经为人民服务的伟大的人",
 };
 
-export default async function RootLayout({
-                                             children,
-                                         }: Readonly<{
-    children: React.ReactNode;
+export default function RootLayout({
+                                       children,
+                                   }: Readonly<{
+    children: ReactNode;
 }>) {
     return (
         <html lang="zh-CN">
         <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-gray-100`}
         >
-        <AuthProvider>
-            <Header/>
-            <main className="flex-grow">
-                {children}
-            </main>
-            <Footer/>
-        </AuthProvider>
+        <Header/>
+        <main className="flex-grow">
+            {children}
+        </main>
+        <Footer/>
         </body>
         </html>
     );

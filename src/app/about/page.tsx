@@ -1,10 +1,6 @@
-'use client';
-
-import React from 'react';
-
 const AboutPage = () => {
     return (
-        <main className="flex-grow">
+        <div>
             {/* Hero Section */}
             <section className="py-20 bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div className="container mx-auto px-4 text-center">
@@ -151,7 +147,7 @@ const AboutPage = () => {
                     </div>
                 </div>
             </section>
-        </main>
+        </div>
     );
 };
 

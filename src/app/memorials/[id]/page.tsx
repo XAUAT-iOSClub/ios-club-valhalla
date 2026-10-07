@@ -1,175 +1,62 @@
-"use client";
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+import { getAllMemorials, getMemorialById } from '@/lib/memorials';
+import { getTagLabel } from '@/lib/types';
 
-import {useEffect, useState} from 'react';
-import {useRouter} from 'next/navigation';
-import {Memorial, Tag} from '@prisma/client';
-import {deleteMemorial, getMemorialById} from '@/lib/services/memorialService';
+// 静态导出下只服务 generateStaticParams 列出的路径。
+// 注意：显式写成 true 会直接导致构建失败，保持 false。
+export const dynamicParams = false;
 
-export default function MemorialDetailPage({params}: { params: Promise<{ id: string }> }) {
-    const router = useRouter();
-    const [memorial, setMemorial] = useState<Memorial | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [resolvedParams, setResolvedParams] = useState<{ id: string } | null>(null);
+export function generateStaticParams() {
+    return getAllMemorials().map((memorial) => ({ id: String(memorial.id) }));
+}
 
-    useEffect(() => {
-        const resolveParams = async () => {
-            const resolved = await params;
-            setResolvedParams(resolved);
-        };
+export async function generateMetadata({params}: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const {id} = await params;
+    const memorial = getMemorialById(Number(id));
 
-        resolveParams();
-    }, [params]);
-
-    useEffect(() => {
-        const fetchMemorial = async () => {
-            if (!resolvedParams?.id) return;
-
-            try {
-                // 将字符串ID转换为数字ID
-                const memorialId = parseInt(resolvedParams.id, 10);
-                if (isNaN(memorialId)) {
-                    setError('无效ID');
-                    return;
-                }
-
-                const data = await getMemorialById(memorialId);
-                setMemorial(data);
-            } catch (err) {
-                setError('获取信息失败');
-                console.error('Failed to fetch memorial:', err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        if (resolvedParams?.id) {
-            fetchMemorial();
-        }
-    }, [resolvedParams?.id]);
-
-    const handleDelete = async () => {
-        if (!memorial) return;
-
-        if (window.confirm('确定要删除这位✌️吗？此操作不可撤销。')) {
-            try {
-                await deleteMemorial(memorial.id);
-                router.push('/');
-                router.refresh();
-            } catch (err) {
-                console.error('Failed to delete memorial:', err);
-                alert('删除失败');
-            }
-        }
+    return {
+        title: memorial ? `${memorial.name} · iOS Club 凌烟阁` : '未找到 · iOS Club 凌烟阁',
     };
+}
 
-    const handleEdit = () => {
-        if (memorial) {
-            router.push(`/memorials/${memorial.id}/edit`);
-        }
-    };
-
-    // 将枚举值转换为中文标签
-    const getTagLabel = (tag: Tag) => {
-        switch (tag) {
-            case Tag.FOUNDER: return '创始人';
-            case Tag.LEADER: return '领导者';
-            case Tag.CONTRIBUTOR: return '贡献者';
-            case Tag.INNOVATOR: return '创新者';
-            case Tag.MENTOR: return '导师';
-            case Tag.VOLUNTEER: return '志愿者';
-            default: return tag;
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                    <div
-                        className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-                    <p className="mt-4 text-gray-600">正在加载信息...</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-red-600 mb-4">错误</h1>
-                    <p className="text-gray-600">{error}</p>
-                    <button
-                        onClick={() => router.back()}
-                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                    >
-                        返回
-                    </button>
-                </div>
-            </div>
-        );
-    }
+export default async function MemorialDetailPage({params}: { params: Promise<{ id: string }> }) {
+    // Next.js 16：params 是 Promise，必须 await
+    const {id} = await params;
+    const memorial = getMemorialById(Number(id));
 
     if (!memorial) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
-                <div className="text-center">
-                    <h1 className="text-2xl font-bold text-gray-900 mb-4">未找到</h1>
-                    <button
-                        onClick={() => router.back()}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                    >
-                        返回
-                    </button>
-                </div>
-            </div>
-        );
+        // 返回 never，同时完成类型收窄。
+        // 静态导出下这条分支不可达 —— 参数由 generateStaticParams 枚举。
+        notFound();
     }
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
             <div className="container mx-auto px-4 py-12">
                 <div className="max-w-4xl mx-auto">
-                    <button
-                        onClick={() => router.back()}
-                        className="mb-6 flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+                    <Link
+                        href="/"
+                        className="mb-6 inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20"
-                             fill="currentColor">
+                             fill="currentColor" aria-hidden="true">
                             <path fillRule="evenodd"
                                   d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
                                   clipRule="evenodd"/>
                         </svg>
-                        返回
-                    </button>
+                        返回名录
+                    </Link>
 
-                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                    <article className="bg-white rounded-2xl shadow-lg overflow-hidden">
                         <div className="p-8">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <div className="flex items-center mb-4">
-                                        <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                                        <span
-                                            className="text-sm font-medium text-gray-500 uppercase tracking-wider">{memorial.title}</span>
-                                    </div>
-                                    <h1 className="text-4xl font-bold text-gray-900 mb-4">{memorial.name}</h1>
-                                </div>
-                                <div className="flex space-x-2">
-                                    <button
-                                        onClick={handleEdit}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                                    >
-                                        编辑
-                                    </button>
-                                    <button
-                                        onClick={handleDelete}
-                                        className="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                                    >
-                                        删除
-                                    </button>
-                                </div>
+                            <div className="flex items-center mb-4">
+                                <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                <span
+                                    className="text-sm font-medium text-gray-500 uppercase tracking-wider">{memorial.title}</span>
                             </div>
+                            <h1 className="text-4xl font-bold text-gray-900 mb-4">{memorial.name}</h1>
 
                             <div className="mt-8">
                                 <h2 className="text-xl font-bold text-gray-900 mb-4">简介</h2>
@@ -183,13 +70,13 @@ export default function MemorialDetailPage({params}: { params: Promise<{ id: str
                                 </div>
                             )}
 
-                            {memorial.tags && memorial.tags.length > 0 && (
+                            {memorial.tags.length > 0 && (
                                 <div className="mt-8">
                                     <h2 className="text-xl font-bold text-gray-900 mb-4">标签</h2>
                                     <div className="flex flex-wrap gap-2">
-                                        {memorial.tags.map((tag, index) => (
-                                            <span 
-                                                key={index} 
+                                        {memorial.tags.map((tag) => (
+                                            <span
+                                                key={tag}
                                                 className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
                                             >
                                                 {getTagLabel(tag)}
@@ -201,16 +88,16 @@ export default function MemorialDetailPage({params}: { params: Promise<{ id: str
 
                             <div className="mt-8 pt-6 border-t border-gray-100">
                                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-500">
-                    ID: {memorial.id}
-                  </span>
-                                    <span className="text-sm text-gray-500">
-                    创建时间: {new Date(memorial.createdAt).toLocaleDateString('zh-CN')}
-                  </span>
+                                    <span className="text-sm text-gray-500">编号：{memorial.id}</span>
+                                    {memorial.createdAt && (
+                                        <span className="text-sm text-gray-500">
+                                            创建时间: {new Date(memorial.createdAt).toLocaleDateString('zh-CN')}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </article>
                 </div>
             </div>
         </div>

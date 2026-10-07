@@ -1,11 +1,6 @@
-"use client";
-
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export default function NotFound() {
-  const router = useRouter();
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="text-center max-w-2xl">
@@ -14,13 +9,7 @@ export default function NotFound() {
         <p className="text-gray-600 mt-2 max-w-md mx-auto">
           抱歉，您要查找的页面不存在或已被移除。请检查URL或返回主页。
         </p>
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="px-6 py-3 bg-white border border-gray-300 rounded-lg text-gray-800 font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
-          >
-            返回上一页
-          </button>
+        <div className="mt-10 flex items-center justify-center">
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 rounded-lg text-white font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all"
