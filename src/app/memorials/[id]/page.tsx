@@ -85,17 +85,6 @@ export default async function MemorialDetailPage({params}: { params: Promise<{ i
                                     </div>
                                 </div>
                             )}
-
-                            <div className="mt-8 pt-6 border-t border-gray-100">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-sm text-gray-500">编号：{memorial.id}</span>
-                                    {memorial.createdAt && (
-                                        <span className="text-sm text-gray-500">
-                                            创建时间: {new Date(memorial.createdAt).toLocaleDateString('zh-CN')}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     </article>
                 </div>
